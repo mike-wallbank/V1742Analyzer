@@ -1,46 +1,87 @@
 // V1742Analzer.h
 
+#ifndef V1742ANALYZER_H
+#define V1742ANALYZER_H
+
+// stl
+#include <iostream>
 #include <map>
+#include <vector>
 #include <string>
 
-class V1742Channel {
+// root
+#include "TString.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+
+namespace novatb {
+  class V1742Channel;
+  class V1742Event;
+  class V1742Analyzer;
+}
+
+// -----------------------------------------------------------------------------
+class novatb::V1742Channel {
 
  public:
 
-  V1742Channel(std::string name);
+  V1742Channel(unsigned int channel, std::string name);
 
-  std::string GetName() { return fName; }
-  void AddSample(double adc);
-  int GetNSamples() { return fADCs.size(); }
-  double GetSample(int sample) { return fADCs.at(sample); }
+  void AddSample(uint16_t adc);
+  void AddWaveform(std::vector<uint16_t> waveform);
+  unsigned int GetChannel();
+  std::string GetName();
+  unsigned int GetNSamples();
+  uint16_t GetSample(unsigned int sample);
+  std::vector<uint16_t> GetWaveform();
 
  private:
 
   std::string fName;
-  std::vector<double> fADCs;
+  unsigned int fChannel;
+  std::vector<uint16_t> fWaveform;
 
 };
 
-V1742Channel::V1742Channel(std::string name) {
-  fName = name;
-}
+// -----------------------------------------------------------------------------
+class novatb::V1742Event {
 
-void V1742Channel::AddSample(double adc) {
-  fADCs.push_back(adc);
-}
+ public:
 
-class V1742Analyzer {
+  V1742Event(unsigned int eventNumber);
+
+  void AddChannel(V1742Channel* channel);
+  V1742Channel* GetChannel(unsigned int channelNumber);
+  std::vector<V1742Channel*> GetChannels();
+  unsigned int GetNChannels();
+  unsigned int EventNumber();
+
+ private:
+
+  unsigned int fEventNumber;
+  std::vector<V1742Channel*> fChannels;
+
+};
+
+// -----------------------------------------------------------------------------
+class novatb::V1742Analyzer {
 
  public:
 
   V1742Analyzer();
-  void AddChannels(std::map<std::string, V1742Channel*> channels);
+  ~V1742Analyzer();
+
+  void AddEvent(V1742Event* event);
   void Analyze();
+  void Write(std::string outFileName);
 
  private:
 
-  std::map<std::string, V1742Channel*> fChannels;
+  std::vector<V1742Event*> fEvents;
+  std::map<int, std::map<int, TH1F*> > fWaveforms;
 
 };
 
-
+#endif
